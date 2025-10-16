@@ -1,13 +1,21 @@
 import { Search, Bell, Menu, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoIcon from "@/assets/pooliverse-logo.png";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Header() {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card card-shadow">
       <div className="container flex h-16 items-center gap-4 px-4">
+        <Button variant="ghost" size="icon" className="mr-2">
+          <Menu className="h-5 w-5" />
+        </Button>
+        
         <Link to="/" className="flex items-center gap-2 font-heading font-bold text-lg">
           <img src={logoIcon} alt="Pooliverse" className="h-8 w-8" />
           <span className="hidden sm:inline">Pooliverse</span>
@@ -25,15 +33,23 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <Bell className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <User className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Menu className="h-5 w-5" />
-          </Button>
+          {user ? (
+            <>
+              <Button variant="ghost" size="icon" className="hidden sm:flex">
+                <Bell className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="hidden sm:flex">
+                <User className="h-5 w-5" />
+              </Button>
+              <Button variant="outline" onClick={signOut} className="hidden sm:flex">
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => navigate("/onboarding")}>
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
     </header>

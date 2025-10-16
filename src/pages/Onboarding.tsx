@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, CheckCircle2, Users, Share2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import logoIcon from "@/assets/pooliverse-logo.png";
+import { useAuth } from "@/hooks/useAuth";
 
 const steps = [
   {
@@ -36,14 +37,34 @@ const steps = [
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [isSignUp, setIsSignUp] = useState(true);
   const navigate = useNavigate();
+  const { user, signUp, signIn, loading } = useAuth();
 
-  const handleNext = () => {
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigate("/");
+      // Handle authentication
+      if (isSignUp) {
+        const { error } = await signUp(email, password, fullName);
+        if (!error) {
+          navigate("/");
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (!error) {
+          navigate("/");
+        }
+      }
     }
   };
 
@@ -138,10 +159,39 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Step 3: Setup */}
+        {/* Step 3: Setup / Authentication */}
         {currentStep === 2 && step.form && (
           <div className="space-y-6">
+            <div className="flex justify-center gap-2 mb-4">
+              <Button
+                variant={isSignUp ? "default" : "outline"}
+                onClick={() => setIsSignUp(true)}
+                className="flex-1"
+              >
+                Sign Up
+              </Button>
+              <Button
+                variant={!isSignUp ? "default" : "outline"}
+                onClick={() => setIsSignUp(false)}
+                className="flex-1"
+              >
+                Sign In
+              </Button>
+            </div>
+
             <div className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -150,29 +200,19 @@ export default function Onboarding() {
                   placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+234 800 000 0000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
-              </div>
-            </div>
-
-            <div className="bg-muted/50 rounded-lg p-4">
-              <h4 className="font-medium mb-2">Social Sign-in</h4>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
-                  Google
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  Apple
-                </Button>
               </div>
             </div>
 
@@ -193,8 +233,11 @@ export default function Onboarding() {
           <Button
             className="flex-1"
             onClick={handleNext}
+            disabled={loading || (currentStep === steps.length - 1 && (!email || !password))}
           >
-            {currentStep === steps.length - 1 ? "Finish Setup" : "Continue"}
+            {currentStep === steps.length - 1 
+              ? (isSignUp ? "Create Account" : "Sign In")
+              : "Continue"}
             {currentStep < steps.length - 1 && <ChevronRight className="ml-2 h-5 w-5" />}
           </Button>
           {currentStep < steps.length - 1 && (
@@ -207,9 +250,9 @@ export default function Onboarding() {
 
       {/* Footer Note */}
       <p className="mt-6 text-sm text-muted-foreground text-center">
-        Already have an account?{" "}
-        <button onClick={() => navigate("/")} className="text-primary hover:underline">
-          Sign in
+        Want to explore first?{" "}
+        <button onClick={handleSkip} className="text-primary hover:underline">
+          Continue as guest
         </button>
       </p>
     </div>
