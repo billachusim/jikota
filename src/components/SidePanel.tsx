@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { useFilters } from "@/hooks/useFilters";
 
 const suggestedCampaigns = [
   { title: "Clean Water Initiative", category: "Health", contributors: 234 },
@@ -22,6 +23,7 @@ interface SidePanelProps {
 }
 
 export default function SidePanel({ onCreateClick }: SidePanelProps) {
+  const { filters, toggleCategory, toggleTag, clearFilters, hasActiveFilters } = useFilters();
   return (
     <aside className="hidden lg:block w-80 space-y-4">
       {/* Create CTA */}
@@ -60,13 +62,26 @@ export default function SidePanel({ onCreateClick }: SidePanelProps) {
 
       {/* Categories */}
       <Card className="p-4">
-        <h3 className="font-heading font-semibold mb-3">Categories</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-heading font-semibold">Categories</h3>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-xs h-7"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <Badge
               key={category}
-              variant="outline"
+              variant={filters.categories.includes(category) ? "default" : "outline"}
               className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-smooth"
+              onClick={() => toggleCategory(category)}
             >
               {category}
             </Badge>
@@ -79,12 +94,14 @@ export default function SidePanel({ onCreateClick }: SidePanelProps) {
         <h3 className="font-heading font-semibold mb-3">Trending Tags</h3>
         <div className="flex flex-wrap gap-2">
           {trendingTags.map((tag) => (
-            <span
+            <Badge
               key={tag}
-              className="text-sm text-primary hover:underline cursor-pointer"
+              variant={filters.tags.includes(tag) ? "default" : "secondary"}
+              className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-smooth"
+              onClick={() => toggleTag(tag)}
             >
               {tag}
-            </span>
+            </Badge>
           ))}
         </div>
       </Card>

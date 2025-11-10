@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Share2, Heart, MessageCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, CheckCircle2, Calendar } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
+import SocialShare from "@/components/SocialShare";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import donateThumb from "@/assets/donate-thumbnail.png";
 import avatar1 from "@/assets/avatar-1.png";
 
@@ -29,6 +31,7 @@ export default function CampaignDetail() {
   const [customAmount, setCustomAmount] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [comment, setComment] = useState("");
 
   // Sample campaign data
   const campaign = {
@@ -135,9 +138,7 @@ export default function CampaignDetail() {
                 >
                   <Heart className={isLiked ? "fill-current text-primary" : ""} />
                 </Button>
-                <Button variant="ghost" size="sm">
-                  <Share2 className="h-4 w-4" />
-                </Button>
+                <SocialShare title={campaign.title} />
                 <Button variant="ghost" size="sm">
                   <MessageCircle className="h-4 w-4" />
                 </Button>
@@ -190,13 +191,109 @@ export default function CampaignDetail() {
               </p>
             </Card>
 
-            {/* Comments */}
+            {/* Updates Timeline */}
             <Card className="p-6">
               <h2 className="font-heading text-xl font-semibold mb-4">
-                Updates & Comments
+                Campaign Updates
               </h2>
-              <Textarea placeholder="Add a comment..." className="mb-3" />
-              <Button size="sm">Post Comment</Button>
+              <div className="space-y-4">
+                <div className="flex gap-3 pb-4 border-b">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={campaign.user.avatar} />
+                    <AvatarFallback>AO</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-sm">{campaign.user.name}</p>
+                      <span className="text-xs text-muted-foreground">2 days ago</span>
+                    </div>
+                    <p className="text-sm text-foreground/90 mb-2">
+                      Thank you all for the amazing support! We've reached 25% of our goal in just one week. Your contributions are making a real difference.
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>Nov 8, 2025</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={campaign.user.avatar} />
+                    <AvatarFallback>AO</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-sm">{campaign.user.name}</p>
+                      <span className="text-xs text-muted-foreground">5 days ago</span>
+                    </div>
+                    <p className="text-sm text-foreground/90 mb-2">
+                      Campaign launched! We're excited to bring educational materials to children in need. Every contribution counts!
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>Nov 5, 2025</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Comments Section */}
+            <Card className="p-6">
+              <h2 className="font-heading text-xl font-semibold mb-4">
+                Comments ({3})
+              </h2>
+              
+              {/* Comment Input */}
+              <div className="mb-6">
+                <Textarea
+                  placeholder="Add a comment..."
+                  className="mb-3"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  maxLength={500}
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {comment.length}/500 characters
+                  </span>
+                  <Button size="sm" disabled={!comment.trim()}>
+                    Post Comment
+                  </Button>
+                </div>
+              </div>
+
+              {/* Comment List */}
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback>JD</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-sm">John Doe</p>
+                      <span className="text-xs text-muted-foreground">1 day ago</span>
+                    </div>
+                    <p className="text-sm text-foreground/90">
+                      Great initiative! Happy to support education for these children.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback>SM</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-sm">Sarah M.</p>
+                      <span className="text-xs text-muted-foreground">3 days ago</span>
+                    </div>
+                    <p className="text-sm text-foreground/90">
+                      This is exactly what our community needs. Keep up the good work!
+                    </p>
+                  </div>
+                </div>
+              </div>
             </Card>
           </div>
 
