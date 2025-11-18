@@ -6,7 +6,15 @@ import { useToast } from "@/hooks/use-toast";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName?: string, userType?: string) => Promise<{ error: any }>;
+  signUp: (
+    email: string, 
+    password: string, 
+    fullName?: string, 
+    userType?: string,
+    businessName?: string,
+    cacRegNumber?: string,
+    businessCategory?: string
+  ) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -40,7 +48,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string, userType?: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    fullName?: string, 
+    userType?: string,
+    businessName?: string,
+    cacRegNumber?: string,
+    businessCategory?: string
+  ) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -51,6 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: {
           full_name: fullName,
           user_type: userType,
+          business_name: businessName,
+          cac_reg_number: cacRegNumber,
+          business_category: businessCategory,
         }
       }
     });

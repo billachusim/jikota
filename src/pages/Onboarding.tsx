@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import logoIcon from "@/assets/pooliverse-logo.png";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,6 +42,12 @@ export default function Onboarding() {
   const [fullName, setFullName] = useState("");
   const [userType, setUserType] = useState<"individual" | "corporate">("individual");
   const [isSignUp, setIsSignUp] = useState(true);
+  
+  // Corporate-specific fields
+  const [businessName, setBusinessName] = useState("");
+  const [cacRegNumber, setCacRegNumber] = useState("");
+  const [businessCategory, setBusinessCategory] = useState("");
+  
   const navigate = useNavigate();
   const { user, signUp, signIn, loading } = useAuth();
 
@@ -56,7 +63,15 @@ export default function Onboarding() {
     } else {
       // Handle authentication
       if (isSignUp) {
-        const { error } = await signUp(email, password, fullName, userType);
+        const { error } = await signUp(
+          email, 
+          password, 
+          fullName, 
+          userType,
+          businessName,
+          cacRegNumber,
+          businessCategory
+        );
         if (!error) {
           navigate("/");
         }
@@ -215,15 +230,69 @@ export default function Onboarding() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="fullName">{userType === "corporate" ? "Contact Person Name" : "Full Name"}</Label>
                     <Input
                       id="fullName"
                       type="text"
-                      placeholder="John Doe"
+                      placeholder={userType === "corporate" ? "John Doe" : "John Doe"}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                     />
                   </div>
+
+                  {userType === "corporate" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="businessName">Business Name</Label>
+                        <Input
+                          id="businessName"
+                          type="text"
+                          placeholder="Acme Corporation"
+                          value={businessName}
+                          onChange={(e) => setBusinessName(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="cacRegNumber">CAC Registration Number</Label>
+                        <Input
+                          id="cacRegNumber"
+                          type="text"
+                          placeholder="RC1234567"
+                          value={cacRegNumber}
+                          onChange={(e) => setCacRegNumber(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="businessCategory">Business Category</Label>
+                        <Select value={businessCategory} onValueChange={setBusinessCategory}>
+                          <SelectTrigger id="businessCategory">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="technology">Technology</SelectItem>
+                            <SelectItem value="agriculture">Agriculture</SelectItem>
+                            <SelectItem value="healthcare">Healthcare</SelectItem>
+                            <SelectItem value="education">Education</SelectItem>
+                            <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                            <SelectItem value="retail">Retail & E-commerce</SelectItem>
+                            <SelectItem value="finance">Finance & Banking</SelectItem>
+                            <SelectItem value="real-estate">Real Estate</SelectItem>
+                            <SelectItem value="hospitality">Hospitality & Tourism</SelectItem>
+                            <SelectItem value="construction">Construction</SelectItem>
+                            <SelectItem value="energy">Energy & Utilities</SelectItem>
+                            <SelectItem value="transport">Transportation & Logistics</SelectItem>
+                            <SelectItem value="media">Media & Entertainment</SelectItem>
+                            <SelectItem value="ngo">Non-Profit/NGO</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
               <div className="space-y-2">
