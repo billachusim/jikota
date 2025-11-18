@@ -39,6 +39,7 @@ export default function Onboarding() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [userType, setUserType] = useState<"individual" | "corporate">("individual");
   const [isSignUp, setIsSignUp] = useState(true);
   const navigate = useNavigate();
   const { user, signUp, signIn, loading } = useAuth();
@@ -55,7 +56,7 @@ export default function Onboarding() {
     } else {
       // Handle authentication
       if (isSignUp) {
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(email, password, fullName, userType);
         if (!error) {
           navigate("/");
         }
@@ -181,16 +182,49 @@ export default function Onboarding() {
 
             <div className="space-y-4">
               {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label>Account Type</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setUserType("individual")}
+                        className={cn(
+                          "p-4 rounded-lg border-2 transition-all text-left",
+                          userType === "individual"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <div className="font-semibold">Individual</div>
+                        <div className="text-sm text-muted-foreground">Personal campaigns</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserType("corporate")}
+                        className={cn(
+                          "p-4 rounded-lg border-2 transition-all text-left",
+                          userType === "corporate"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <div className="font-semibold">Corporate</div>
+                        <div className="text-sm text-muted-foreground">Business campaigns</div>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="John Doe"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+                </>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
