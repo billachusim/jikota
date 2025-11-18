@@ -9,24 +9,11 @@ import participateThumb from "@/assets/participate-thumbnail.png";
 import donateThumb from "@/assets/donate-thumbnail.png";
 import investThumb from "@/assets/invest-thumbnail.png";
 import avatar1 from "@/assets/avatar-1.png";
+import { CampaignWithDetails } from "@/hooks/useCampaigns";
+import { formatDistanceToNow } from "date-fns";
 
 interface PostCardProps {
-  post: {
-    id: string;
-    title: string;
-    category: string;
-    body: string;
-    raised: number;
-    goal: number;
-    contributors: number;
-    days_left: number;
-    thumbnail: string;
-    user: {
-      name: string;
-      avatar: string;
-    };
-    time: string;
-  };
+  campaign: CampaignWithDetails;
 }
 
 const thumbnails = {
@@ -35,16 +22,17 @@ const thumbnails = {
   INVEST: investThumb,
 };
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard({ campaign }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   
-  const progressPercent = (post.raised / post.goal) * 100;
-  const truncatedBody = post.body.split("\n").slice(0, 6).join("\n");
-  const needsTruncation = post.body.length > truncatedBody.length;
+  const progressPercent = (campaign.current_amount / campaign.target_amount) * 100;
+  const truncatedBody = campaign.description.split("\n").slice(0, 6).join("\n");
+  const needsTruncation = campaign.description.length > truncatedBody.length;
 
-  const thumbnailSrc = thumbnails[post.thumbnail as keyof typeof thumbnails] || donateThumb;
-  const avatarSrc = post.user.avatar === "avatar-1" ? avatar1 : avatar1;
+  const thumbnailSrc = donateThumb; // Default thumbnail for now
+  const avatarSrc = campaign.profiles?.avatar_url || avatar1;
+  const timeAgo = formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true });
 
   return (
     <article className="bg-card rounded-lg p-4 md:p-6 card-shadow hover:card-shadow-hover transition-smooth animate-slide-up">
@@ -53,15 +41,15 @@ export default function PostCard({ post }: PostCardProps) {
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <img
             src={avatarSrc}
-            alt={post.user.name}
+            alt={campaign.profiles?.full_name || "User"}
             className="h-10 w-10 rounded-full object-cover flex-shrink-0"
           />
           <div className="flex flex-wrap items-center gap-2 text-sm min-w-0">
-            <span className="font-medium truncate">{post.user.name}</span>
+            <span className="font-medium truncate">{campaign.profiles?.full_name || "Anonymous"}</span>
             <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground whitespace-nowrap">{post.time}</span>
+            <span className="text-muted-foreground whitespace-nowrap">{timeAgo}</span>
             <Badge variant="secondary" className="shrink-0">
-              {post.category}
+              {campaign.category}
             </Badge>
           </div>
         </div>
@@ -70,13 +58,13 @@ export default function PostCard({ post }: PostCardProps) {
         </Button>
       </div>
 
-      <Link to={`/campaign/${post.id}`} className="block group">
+      <Link to={`/campaign/${campaign.id}`} className="block group">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Thumbnail */}
           <div className="w-full md:w-32 h-32 flex-shrink-0 overflow-hidden rounded-lg">
             <img
-              src={thumbnailSrc}
-              alt={post.thumbnail}
+              src={campaign.image_url || thumbnailSrc}
+              alt={campaign.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-smooth"
             />
           </div>
@@ -84,10 +72,10 @@ export default function PostCard({ post }: PostCardProps) {
           {/* Content */}
           <div className="flex-1 min-w-0">
             <h3 className="font-heading font-semibold text-lg mb-2 group-hover:text-primary transition-smooth">
-              {post.title}
+              {campaign.title}
             </h3>
             <p className="text-sm text-foreground/80 mb-3 whitespace-pre-wrap">
-              {isExpanded ? post.body : truncatedBody}
+              {isExpanded ? campaign.description : truncatedBody}
               {needsTruncation && !isExpanded && "…"}
               {needsTruncation && !isExpanded && (
                 <button
@@ -110,33 +98,18 @@ export default function PostCard({ post }: PostCardProps) {
         <Progress value={progressPercent} className="h-2" />
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold">
-            ₦{post.raised.toLocaleString()} raised
+            ₦{campaign.current_amount.toLocaleString()} raised
           </span>
           <span className="text-muted-foreground">
-            of ₦{post.goal.toLocaleString()}
+            of ₦{campaign.target_amount.toLocaleString()}
           </span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">
-            {post.contributors} contributors
-          </span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">
-            {post.days_left} days left
-          </span>
-        </div>
-
-        {/* Contributors avatars */}
-        <div className="flex items-center gap-1">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-8 w-8 rounded-full border-2 border-card bg-muted -ml-2 first:ml-0"
-            />
-          ))}
-          {post.contributors > 3 && (
-            <span className="text-sm text-muted-foreground ml-1">
-              +{post.contributors - 3}
-            </span>
+          {campaign.milestones && campaign.milestones.length > 0 && (
+            <>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">
+                {campaign.milestones.filter(m => m.completed).length} of {campaign.milestones.length} milestones
+              </span>
+            </>
           )}
         </div>
       </div>
