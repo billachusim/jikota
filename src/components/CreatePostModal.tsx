@@ -22,6 +22,8 @@ import { toast } from "@/hooks/use-toast";
 import participateThumb from "@/assets/participate-thumbnail.png";
 import donateThumb from "@/assets/donate-thumbnail.png";
 import investThumb from "@/assets/invest-thumbnail.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const thumbnails = [
   {
@@ -59,6 +61,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
   const [milestones, setMilestones] = useState<Array<{ title: string; amount: string; date: string }>>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const { user } = useAuth();
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -147,17 +150,75 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create a campaign.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
     
-    localStorage.removeItem("campaignDraft");
-    toast({
-      title: "Campaign published!",
-      description: "Your campaign is now live"
-    });
-    onOpenChange(false);
+    try {
+      // Insert campaign
+      const { data: campaign, error: campaignError } = await supabase
+        .from("campaigns")
+        .insert({
+          title,
+          category,
+          description: body,
+          target_amount: parseFloat(goal),
+          user_id: user.id,
+          status: "active",
+        })
+        .select()
+        .single();
+
+      if (campaignError) throw campaignError;
+
+      // Insert milestones if any
+      if (milestones.length > 0 && campaign) {
+        const milestonesData = milestones.map((m) => ({
+          campaign_id: campaign.id,
+          title: m.title,
+          amount: parseFloat(m.amount),
+          target_date: m.date,
+        }));
+
+        const { error: milestonesError } = await supabase
+          .from("milestones")
+          .insert(milestonesData);
+
+        if (milestonesError) throw milestonesError;
+      }
+
+      // Clear the draft and form
+      localStorage.removeItem("campaignDraft");
+      setTitle("");
+      setCategory("");
+      setGoal("");
+      setDeadline("");
+      setBody("");
+      setMilestones([]);
+      setSelectedThumbnail("DONATE");
+      
+      toast({
+        title: "Campaign published!",
+        description: "Your campaign is now live"
+      });
+      
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create campaign.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
