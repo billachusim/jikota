@@ -14,6 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaigns: {
+        Row: {
+          category: string
+          created_at: string
+          current_amount: number
+          description: string
+          id: string
+          image_url: string | null
+          status: string
+          target_amount: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          current_amount?: number
+          description: string
+          id?: string
+          image_url?: string | null
+          status?: string
+          target_amount: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          current_amount?: number
+          description?: string
+          id?: string
+          image_url?: string | null
+          status?: string
+          target_amount?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestones: {
+        Row: {
+          amount: number
+          campaign_id: string
+          completed: boolean
+          created_at: string
+          description: string | null
+          id: string
+          target_date: string
+          title: string
+        }
+        Insert: {
+          amount: number
+          campaign_id: string
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          target_date: string
+          title: string
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          target_date?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestones_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -22,6 +113,7 @@ export type Database = {
           full_name: string | null
           id: string
           updated_at: string | null
+          user_type: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -30,6 +122,7 @@ export type Database = {
           full_name?: string | null
           id: string
           updated_at?: string | null
+          user_type?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -38,6 +131,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+          user_type?: string | null
         }
         Relationships: []
       }
