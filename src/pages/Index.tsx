@@ -8,6 +8,8 @@ import CreatePostModal from "@/components/CreatePostModal";
 import FloatingFAB from "@/components/FloatingFAB";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { Loader2 } from "lucide-react";
 
 // Sample seed data
 const samplePosts = [
@@ -64,6 +66,7 @@ const samplePosts = [
 export default function Index() {
   const [activeTab, setActiveTab] = useState("trending");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { campaigns, loading } = useCampaigns();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -84,12 +87,15 @@ export default function Index() {
         <div className="flex gap-6">
           {/* Feed */}
           <div className="flex-1 space-y-4">
-            {samplePosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-
-            {/* Empty State */}
-            {samplePosts.length === 0 && (
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : campaigns.length > 0 ? (
+              campaigns.map((campaign) => (
+                <PostCard key={campaign.id} campaign={campaign} />
+              ))
+            ) : (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
                   No trending campaigns yet — be the first to start a pool!
