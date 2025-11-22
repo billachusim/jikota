@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Plus, Calendar, AlertCircle } from "lucide-react";
+import { X, Plus, Calendar, AlertCircle, Upload, Image as ImageIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -61,7 +61,33 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
   const [milestones, setMilestones] = useState<Array<{ title: string; amount: string; date: string }>>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { user } = useAuth();
+
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setErrors({ ...errors, image: "Image must be less than 5MB" });
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setErrors({ ...errors, image: "" });
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -165,8 +191,32 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
     }
 
     setIsSaving(true);
+    setIsUploading(true);
     
     try {
+      let imageUrl: string | null = null;
+
+      // Upload image if one is selected
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('campaign-images')
+          .upload(fileName, imageFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('campaign-images')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
       // Insert campaign
       const { data: campaign, error: campaignError } = await supabase
         .from("campaigns")
@@ -177,6 +227,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
           target_amount: selectedThumbnail === "PARTICIPATE" ? 0 : parseFloat(goal),
           user_id: user.id,
           status: "active",
+          image_url: imageUrl,
         })
         .select()
         .single();
@@ -208,6 +259,8 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
       setBody("");
       setMilestones([]);
       setSelectedThumbnail("DONATE");
+      setImageFile(null);
+      setImagePreview(null);
       
       toast({
         title: "Campaign published!",
@@ -223,6 +276,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
       });
     } finally {
       setIsSaving(false);
+      setIsUploading(false);
     }
   };
 
@@ -351,6 +405,52 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
             </div>
           )}
 
+          {/* Image Upload */}
+          <div className="space-y-2">
+            <Label htmlFor="image">Campaign Image (Optional)</Label>
+            {!imagePreview ? (
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-smooth">
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <label htmlFor="image" className="cursor-pointer flex flex-col items-center gap-2">
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Click to upload image</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 5MB</p>
+                  </div>
+                </label>
+              </div>
+            ) : (
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-48 object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={removeImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            {errors.image && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {errors.image}
+              </p>
+            )}
+          </div>
+
           {/* Body */}
           <div className="space-y-2">
             <Label htmlFor="body">
@@ -477,9 +577,9 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
             <Button variant="outline" className="flex-1" onClick={validateForm}>
               Preview
             </Button>
-            <Button className="flex-1" onClick={handlePublish} disabled={isSaving}>
+            <Button className="flex-1" onClick={handlePublish} disabled={isSaving || isUploading}>
               {isSaving 
-                ? "Publishing..." 
+                ? isUploading ? "Uploading..." : "Publishing..." 
                 : selectedThumbnail === "PARTICIPATE" 
                   ? "Publish Post" 
                   : "Publish Campaign"}
