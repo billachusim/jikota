@@ -29,19 +29,19 @@ const thumbnails = [
   {
     id: "PARTICIPATE",
     label: "Participate",
-    description: "Hands-on involvement",
+    description: "Start a discussion",
     image: participateThumb,
   },
   {
     id: "DONATE",
     label: "Donate",
-    description: "Financial contribution",
+    description: "Request donations",
     image: donateThumb,
   },
   {
     id: "INVEST",
     label: "Invest",
-    description: "Growth opportunity",
+    description: "Seek investment",
     image: investThumb,
   },
 ];
@@ -102,32 +102,37 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
 
     if (!category) newErrors.category = "Category is required";
 
-    if (!goal) newErrors.goal = "Funding goal is required";
-    else if (parseInt(goal) < 1000) newErrors.goal = "Goal must be at least ₦1,000";
+    // Only validate funding goal and deadline for non-Participate campaigns
+    if (selectedThumbnail !== "PARTICIPATE") {
+      if (!goal) newErrors.goal = "Funding goal is required";
+      else if (parseInt(goal) < 1000) newErrors.goal = "Goal must be at least ₦1,000";
 
-    if (!deadline) newErrors.deadline = "Deadline is required";
-    else if (new Date(deadline) <= new Date()) newErrors.deadline = "Deadline must be in the future";
+      if (!deadline) newErrors.deadline = "Deadline is required";
+      else if (new Date(deadline) <= new Date()) newErrors.deadline = "Deadline must be in the future";
+    }
 
     if (!body.trim()) newErrors.body = "Description is required";
     else if (body.length < 100) newErrors.body = "Description must be at least 100 characters";
     else if (body.length > 5000) newErrors.body = "Description must be under 5000 characters";
 
-    // Validate milestones
-    milestones.forEach((milestone, index) => {
-      if (milestone.title && !milestone.amount) {
-        newErrors[`milestone_${index}_amount`] = "Amount required";
-      }
-      if (milestone.amount && parseInt(milestone.amount) > parseInt(goal)) {
-        newErrors[`milestone_${index}_amount`] = "Cannot exceed total goal";
-      }
-      if (index > 0 && milestone.date) {
-        const prevDate = new Date(milestones[index - 1].date);
-        const currentDate = new Date(milestone.date);
-        if (currentDate <= prevDate) {
-          newErrors[`milestone_${index}_date`] = "Must be after previous milestone";
+    // Validate milestones only for non-Participate campaigns
+    if (selectedThumbnail !== "PARTICIPATE") {
+      milestones.forEach((milestone, index) => {
+        if (milestone.title && !milestone.amount) {
+          newErrors[`milestone_${index}_amount`] = "Amount required";
         }
-      }
-    });
+        if (milestone.amount && parseInt(milestone.amount) > parseInt(goal)) {
+          newErrors[`milestone_${index}_amount`] = "Cannot exceed total goal";
+        }
+        if (index > 0 && milestone.date) {
+          const prevDate = new Date(milestones[index - 1].date);
+          const currentDate = new Date(milestone.date);
+          if (currentDate <= prevDate) {
+            newErrors[`milestone_${index}_date`] = "Must be after previous milestone";
+          }
+        }
+      });
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -167,9 +172,9 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
         .from("campaigns")
         .insert({
           title,
-          category,
+          category: selectedThumbnail === "PARTICIPATE" ? "Participate" : category,
           description: body,
-          target_amount: parseFloat(goal),
+          target_amount: selectedThumbnail === "PARTICIPATE" ? 0 : parseFloat(goal),
           user_id: user.id,
           status: "active",
         })
@@ -178,8 +183,8 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
 
       if (campaignError) throw campaignError;
 
-      // Insert milestones if any
-      if (milestones.length > 0 && campaign) {
+      // Insert milestones only for non-Participate campaigns
+      if (selectedThumbnail !== "PARTICIPATE" && milestones.length > 0 && campaign) {
         const milestonesData = milestones.map((m) => ({
           campaign_id: campaign.id,
           title: m.title,
@@ -304,52 +309,60 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
             )}
           </div>
 
-          {/* Goal & Deadline */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="goal">Funding Goal (₦) *</Label>
-              <Input
-                id="goal"
-                type="number"
-                placeholder="100000"
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                className={errors.goal ? "border-destructive" : ""}
-              />
-              {errors.goal && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.goal}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deadline">Deadline *</Label>
-              <div className="relative">
+          {/* Goal & Deadline - Only show for non-Participate campaigns */}
+          {selectedThumbnail !== "PARTICIPATE" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="goal">Funding Goal (₦) *</Label>
                 <Input
-                  id="deadline"
-                  type="date"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                  className={errors.deadline ? "border-destructive" : ""}
+                  id="goal"
+                  type="number"
+                  placeholder="100000"
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  className={errors.goal ? "border-destructive" : ""}
                 />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                {errors.goal && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.goal}
+                  </p>
+                )}
               </div>
-              {errors.deadline && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errors.deadline}
-                </p>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="deadline">Deadline *</Label>
+                <div className="relative">
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    className={errors.deadline ? "border-destructive" : ""}
+                  />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                </div>
+                {errors.deadline && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.deadline}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Body */}
           <div className="space-y-2">
-            <Label htmlFor="body">Campaign Description *</Label>
+            <Label htmlFor="body">
+              {selectedThumbnail === "PARTICIPATE" ? "Discussion Post *" : "Campaign Description *"}
+            </Label>
             <Textarea
               id="body"
-              placeholder="Tell your story and explain how funds will be used..."
+              placeholder={
+                selectedThumbnail === "PARTICIPATE" 
+                  ? "Share your thoughts, ask questions, or start a discussion..."
+                  : "Tell your story and explain how funds will be used..."
+              }
               className={cn("min-h-32", errors.body && "border-destructive")}
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -367,12 +380,15 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
               </p>
             </div>
             <p className="text-xs text-muted-foreground">
-              💡 Tip: Be specific about your goals and how the funds will make an impact
+              {selectedThumbnail === "PARTICIPATE" 
+                ? "💡 Tip: Be clear and engaging to encourage discussion"
+                : "💡 Tip: Be specific about your goals and how the funds will make an impact"}
             </p>
           </div>
 
-          {/* Milestones */}
-          <div className="space-y-3">
+          {/* Milestones - Only show for non-Participate campaigns */}
+          {selectedThumbnail !== "PARTICIPATE" && (
+            <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Milestones (Optional)</Label>
               <Button type="button" variant="outline" size="sm" onClick={addMilestone}>
@@ -451,6 +467,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
               💡 Tip: Add milestones to build trust — donors can release funds per milestone
             </p>
           </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
@@ -461,7 +478,11 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
               Preview
             </Button>
             <Button className="flex-1" onClick={handlePublish} disabled={isSaving}>
-              {isSaving ? "Publishing..." : "Publish Campaign"}
+              {isSaving 
+                ? "Publishing..." 
+                : selectedThumbnail === "PARTICIPATE" 
+                  ? "Publish Post" 
+                  : "Publish Campaign"}
             </Button>
           </div>
         </div>
