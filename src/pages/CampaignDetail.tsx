@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, MessageCircle, CheckCircle2, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
+import { ArrowLeft, CheckCircle2, Calendar } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
-import SocialShare from "@/components/SocialShare";
 import Comments from "@/components/Comments";
+import CampaignActions from "@/components/CampaignActions";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -27,10 +27,18 @@ const milestones = [
 
 export default function CampaignDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+
+  useEffect(() => {
+    if (location.hash === "#comments") {
+      setTimeout(() => {
+        document.getElementById("comments")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [location]);
 
   // Sample campaign data
   const campaign = {
@@ -130,18 +138,11 @@ export default function CampaignDetail() {
                     <p className="text-sm text-muted-foreground">days left</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsLiked(!isLiked)}
-                  >
-                    <Heart className={isLiked ? "fill-current text-primary" : ""} />
-                  </Button>
-                  <SocialShare title={campaign.title} />
-                  <Button variant="ghost" size="sm">
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
+                <div className="mt-4">
+                  <CampaignActions 
+                    campaignId={campaign.id} 
+                    campaignTitle={campaign.title}
+                  />
                 </div>
               </Card>
             )}
@@ -149,19 +150,10 @@ export default function CampaignDetail() {
             {/* Engagement for Participate */}
             {campaign.category === "Participate" && (
               <Card className="p-6">
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsLiked(!isLiked)}
-                  >
-                    <Heart className={isLiked ? "fill-current text-primary" : ""} />
-                  </Button>
-                  <SocialShare title={campaign.title} />
-                  <Button variant="ghost" size="sm">
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
-                </div>
+                <CampaignActions 
+                  campaignId={campaign.id} 
+                  campaignTitle={campaign.title}
+                />
               </Card>
             )}
 
@@ -261,7 +253,7 @@ export default function CampaignDetail() {
             </Card>
 
             {/* Comments Section */}
-            <Card className="p-6">
+            <Card className="p-6" id="comments">
               <Comments campaignId={campaign.id} />
             </Card>
           </div>

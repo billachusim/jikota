@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Heart, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Comment {
   id: string;
@@ -19,6 +20,8 @@ interface Comment {
     username: string | null;
     avatar_url: string | null;
   } | null;
+  likes?: number;
+  isLiked?: boolean;
 }
 
 interface CommentsProps {
@@ -56,7 +59,34 @@ export default function Comments({ campaignId }: CommentsProps) {
       return;
     }
 
-    setComments(data || []);
+    // Fetch likes for each comment
+    const commentsWithLikes = await Promise.all(
+      (data || []).map(async (comment) => {
+        const { count } = await supabase
+          .from("comment_likes")
+          .select("*", { count: "exact", head: true })
+          .eq("comment_id", comment.id);
+
+        let isLiked = false;
+        if (user) {
+          const { data: likeData } = await supabase
+            .from("comment_likes")
+            .select("id")
+            .eq("comment_id", comment.id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+          isLiked = !!likeData;
+        }
+
+        return {
+          ...comment,
+          likes: count || 0,
+          isLiked,
+        };
+      })
+    );
+
+    setComments(commentsWithLikes);
   };
 
   const handleAddComment = async () => {
@@ -140,6 +170,36 @@ export default function Comments({ campaignId }: CommentsProps) {
     return comments.filter((c) => c.parent_comment_id === commentId);
   };
 
+  const toggleCommentLike = async (commentId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to like comments",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    if (comment.isLiked) {
+      // Unlike
+      await supabase
+        .from("comment_likes")
+        .delete()
+        .eq("comment_id", commentId)
+        .eq("user_id", user.id);
+    } else {
+      // Like
+      await supabase
+        .from("comment_likes")
+        .insert({ comment_id: commentId, user_id: user.id });
+    }
+
+    fetchComments();
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="font-heading text-xl font-semibold">
@@ -200,15 +260,26 @@ export default function Comments({ campaignId }: CommentsProps) {
                   <p className="text-sm text-foreground/90 mb-2 whitespace-pre-wrap">
                     {comment.content}
                   </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setReplyingTo(comment.id)}
-                    className="h-8 px-2"
-                  >
-                    <MessageCircle className="h-3 w-3 mr-1" />
-                    Reply
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setReplyingTo(comment.id)}
+                      className="h-8 px-2"
+                    >
+                      <MessageCircle className="h-3 w-3 mr-1" />
+                      Reply
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleCommentLike(comment.id)}
+                      className={cn("h-8 px-2", comment.isLiked && "text-primary")}
+                    >
+                      <Heart className={cn("h-3 w-3 mr-1", comment.isLiked && "fill-current")} />
+                      <span className="text-xs">{comment.likes || 0}</span>
+                    </Button>
+                  </div>
 
                   {/* Reply Input */}
                   {replyingTo === comment.id && (

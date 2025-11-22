@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Share2, AtSign, Heart, UserPlus, Send, MoreVertical } from "lucide-react";
+import { MessageCircle, Share2, AtSign, Heart, UserPlus, Send, MoreVertical, Bookmark } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -11,6 +11,9 @@ import investThumb from "@/assets/invest-thumbnail.png";
 import avatar1 from "@/assets/avatar-1.png";
 import { CampaignWithDetails } from "@/hooks/useCampaigns";
 import { formatDistanceToNow } from "date-fns";
+import CampaignActions from "@/components/CampaignActions";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface PostCardProps {
   campaign: CampaignWithDetails;
@@ -24,7 +27,8 @@ const thumbnails = {
 
 export default function PostCard({ campaign }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [quoteText, setQuoteText] = useState("");
   
   const progressPercent = (campaign.current_amount / campaign.target_amount) * 100;
   const truncatedBody = campaign.description.split("\n").slice(0, 6).join("\n");
@@ -34,8 +38,14 @@ export default function PostCard({ campaign }: PostCardProps) {
   const avatarSrc = campaign.profiles?.avatar_url || avatar1;
   const timeAgo = formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true });
 
+  const handleQuote = () => {
+    setQuoteText(`"${campaign.title}"\n\n`);
+    setQuoteModalOpen(true);
+  };
+
   return (
-    <article className="bg-card rounded-lg p-4 md:p-6 card-shadow hover:card-shadow-hover transition-smooth animate-slide-up">
+    <>
+      <article className="bg-card rounded-lg p-4 md:p-6 card-shadow hover:card-shadow-hover transition-smooth animate-slide-up">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -117,37 +127,34 @@ export default function PostCard({ campaign }: PostCardProps) {
       )}
 
       {/* Actions */}
-      <div className="mt-4 flex flex-wrap items-center gap-1">
-        <Button variant="ghost" size="sm">
-          <MessageCircle className="h-4 w-4 mr-1" />
-          <span className="text-xs">42</span>
-        </Button>
-        <Button variant="ghost" size="sm">
-          <Share2 className="h-4 w-4 mr-1" />
-          <span className="text-xs">Share</span>
-        </Button>
-        <Button variant="ghost" size="sm">
-          <AtSign className="h-4 w-4 mr-1" />
-          <span className="text-xs">Mention</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsLiked(!isLiked)}
-          className={cn(isLiked && "text-primary")}
-        >
-          <Heart className={cn("h-4 w-4 mr-1", isLiked && "fill-current")} />
-          <span className="text-xs">{isLiked ? "156" : "155"}</span>
-        </Button>
-        <Button variant="ghost" size="sm">
-          <UserPlus className="h-4 w-4 mr-1" />
-          <span className="text-xs">Follow</span>
-        </Button>
-        <Button variant="ghost" size="sm">
-          <Send className="h-4 w-4 mr-1" />
-          <span className="text-xs">Send</span>
-        </Button>
+      <div className="mt-4">
+        <CampaignActions 
+          campaignId={campaign.id} 
+          campaignTitle={campaign.title}
+          onQuote={handleQuote}
+        />
       </div>
     </article>
+
+    {/* Quote Modal */}
+    <Dialog open={quoteModalOpen} onOpenChange={setQuoteModalOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Quote Campaign</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Textarea
+            value={quoteText}
+            onChange={(e) => setQuoteText(e.target.value)}
+            placeholder="Add your thoughts..."
+            className="min-h-[150px]"
+          />
+          <Button onClick={() => setQuoteModalOpen(false)} className="w-full">
+            Share Quote
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
