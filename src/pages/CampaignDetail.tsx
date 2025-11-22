@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Calendar } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Calendar, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -16,14 +16,11 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import donateThumb from "@/assets/donate-thumbnail.png";
 import avatar1 from "@/assets/avatar-1.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 
 const presetAmounts = [1000, 2500, 5000, 10000];
-
-const milestones = [
-  { title: "Purchase textbooks", amount: 40000, date: "Nov 15, 2025", completed: false },
-  { title: "Buy uniforms", amount: 35000, date: "Nov 30, 2025", completed: false },
-  { title: "Writing materials", amount: 25000, date: "Dec 15, 2025", completed: false },
-];
 
 export default function CampaignDetail() {
   const { id } = useParams();
@@ -31,6 +28,26 @@ export default function CampaignDetail() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+
+  // Fetch campaign data
+  const { data: campaign, isLoading, error } = useQuery({
+    queryKey: ['campaign', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select(`
+          *,
+          profiles(*),
+          milestones(*)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
 
   useEffect(() => {
     if (location.hash === "#comments") {
@@ -40,25 +57,39 @@ export default function CampaignDetail() {
     }
   }, [location]);
 
-  // Sample campaign data
-  const campaign = {
-    id: id || "p-001",
-    title: "School books fund for 60 children",
-    category: "Education",
-    body: "We need funds to buy school books and uniforms for 60 children in our community. The children are bright and eager to learn but lack essential materials. Your support will be used to purchase textbooks, writing materials, and uniforms.\n\nMany of these children walk miles to school every day, demonstrating their commitment to education. However, without proper materials, they struggle to keep up with their peers. This campaign aims to level the playing field and give every child an equal opportunity to succeed.\n\nThe funds will be distributed directly to local suppliers, and we will provide regular updates on purchases made. Every contribution, no matter how small, makes a real difference in a child's educational journey.",
-    raised: 25400,
-    goal: 100000,
-    contributors: 62,
-    days_left: 7,
-    thumbnail: donateThumb,
-    user: {
-      name: "Amina O.",
-      avatar: avatar1,
-      verified: true,
-    },
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container py-6 pb-20 lg:pb-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+        <BottomNav />
+        <Footer />
+      </div>
+    );
+  }
 
-  const progressPercent = (campaign.raised / campaign.goal) * 100;
+  if (error || !campaign) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container py-6 pb-20 lg:pb-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-2">Campaign not found</h2>
+            <p className="text-muted-foreground mb-4">The campaign you're looking for doesn't exist.</p>
+            <Link to="/">
+              <Button>Back to Feed</Button>
+            </Link>
+          </div>
+        </main>
+        <BottomNav />
+        <Footer />
+      </div>
+    );
+  }
+
+  const progressPercent = campaign.target_amount > 0 ? (campaign.current_amount / campaign.target_amount) * 100 : 0;
   const activeAmount = selectedAmount || (customAmount ? parseInt(customAmount) : 0);
   const platformFee = Math.round(activeAmount * 0.025);
   const totalAmount = activeAmount + platformFee;
@@ -82,7 +113,7 @@ export default function CampaignDetail() {
             {/* Hero */}
             <div className="relative rounded-lg overflow-hidden">
               <img
-                src={campaign.thumbnail}
+                src={campaign.image_url || donateThumb}
                 alt={campaign.title}
                 className="w-full h-64 object-cover"
               />
@@ -97,19 +128,19 @@ export default function CampaignDetail() {
                 {campaign.title}
               </h1>
               <div className="flex items-center gap-3">
-                <img
-                  src={campaign.user.avatar}
-                  alt={campaign.user.name}
-                  className="h-12 w-12 rounded-full object-cover"
-                />
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={campaign.profiles?.avatar_url || avatar1} />
+                  <AvatarFallback>
+                    {campaign.profiles?.full_name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <p className="font-medium flex items-center gap-2">
-                    {campaign.user.name}
-                    {campaign.user.verified && (
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    )}
+                    {campaign.profiles?.full_name || "Anonymous"}
                   </p>
-                  <p className="text-sm text-muted-foreground">Campaign Creator</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}
+                  </p>
                 </div>
               </div>
             </div>
@@ -121,26 +152,16 @@ export default function CampaignDetail() {
                 <div className="flex flex-wrap items-center gap-3 mb-4">
                   <div>
                     <p className="text-2xl font-bold">
-                      ₦{campaign.raised.toLocaleString()}
+                      ₦{campaign.current_amount.toLocaleString()}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      raised of ₦{campaign.goal.toLocaleString()}
+                      raised of ₦{campaign.target_amount.toLocaleString()}
                     </p>
-                  </div>
-                  <div className="h-8 w-px bg-border" />
-                  <div>
-                    <p className="text-2xl font-bold">{campaign.contributors}</p>
-                    <p className="text-sm text-muted-foreground">contributors</p>
-                  </div>
-                  <div className="h-8 w-px bg-border" />
-                  <div>
-                    <p className="text-2xl font-bold">{campaign.days_left}</p>
-                    <p className="text-sm text-muted-foreground">days left</p>
                   </div>
                 </div>
                 <div className="mt-4">
                   <CampaignActions 
-                    campaignId={campaign.id} 
+                    campaignId={campaign.id}
                     campaignTitle={campaign.title}
                   />
                 </div>
@@ -160,23 +181,23 @@ export default function CampaignDetail() {
             {/* Description */}
             <Card className="p-6">
               <h2 className="font-heading text-xl font-semibold mb-4">
-                About this campaign
+                {campaign.category === "Participate" ? "Discussion" : "About this campaign"}
               </h2>
               <p className="whitespace-pre-wrap text-foreground/90">
-                {campaign.body}
+                {campaign.description}
               </p>
             </Card>
 
             {/* Milestones - Show only for non-Participate campaigns */}
-            {campaign.category !== "Participate" && (
+            {campaign.category !== "Participate" && campaign.milestones && campaign.milestones.length > 0 && (
               <Card className="p-6">
                 <h2 className="font-heading text-xl font-semibold mb-4">
                   Milestones
                 </h2>
                 <div className="space-y-4">
-                  {milestones.map((milestone, index) => (
+                  {campaign.milestones.map((milestone: any, index: number) => (
                     <div
-                      key={index}
+                      key={milestone.id || index}
                       className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
                     >
                       <div className="flex-shrink-0 mt-1">
@@ -193,8 +214,13 @@ export default function CampaignDetail() {
                         <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
                           <span>₦{milestone.amount.toLocaleString()}</span>
                           <span>·</span>
-                          <span>{milestone.date}</span>
+                          <span>{new Date(milestone.target_date).toLocaleDateString()}</span>
                         </div>
+                        {milestone.description && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {milestone.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -205,7 +231,7 @@ export default function CampaignDetail() {
               </Card>
             )}
 
-            {/* Updates Timeline */}
+            {/* Campaign Updates */}
             <Card className="p-6">
               <h2 className="font-heading text-xl font-semibold mb-4">
                 Campaign Updates
@@ -213,39 +239,24 @@ export default function CampaignDetail() {
               <div className="space-y-4">
                 <div className="flex gap-3 pb-4 border-b">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={campaign.user.avatar} />
-                    <AvatarFallback>AO</AvatarFallback>
+                    <AvatarImage src={campaign.profiles?.avatar_url || avatar1} />
+                    <AvatarFallback>
+                      {campaign.profiles?.full_name?.charAt(0) || "U"}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm">{campaign.user.name}</p>
-                      <span className="text-xs text-muted-foreground">2 days ago</span>
+                      <p className="font-medium text-sm">{campaign.profiles?.full_name || "Anonymous"}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}
+                      </span>
                     </div>
                     <p className="text-sm text-foreground/90 mb-2">
-                      Thank you all for the amazing support! We've reached 25% of our goal in just one week. Your contributions are making a real difference.
+                      Campaign created
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      <span>Nov 8, 2025</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={campaign.user.avatar} />
-                    <AvatarFallback>AO</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm">{campaign.user.name}</p>
-                      <span className="text-xs text-muted-foreground">5 days ago</span>
-                    </div>
-                    <p className="text-sm text-foreground/90 mb-2">
-                      Campaign launched! We're excited to bring educational materials to children in need. Every contribution counts!
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>Nov 5, 2025</span>
+                      <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
