@@ -1,15 +1,17 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import AdCarousel from "@/components/AdCarousel";
-import FeedTabs from "@/components/FeedTabs";
 import PostCard from "@/components/PostCard";
 import SidePanel from "@/components/SidePanel";
 import CreatePostModal from "@/components/CreatePostModal";
 import FloatingFAB from "@/components/FloatingFAB";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
+import SearchOverlay from "@/components/SearchOverlay";
 import { useCampaigns } from "@/hooks/useCampaigns";
-import { Loader2 } from "lucide-react";
+import { useSearch } from "@/hooks/useSearch";
+import { Loader2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 // Sample seed data
 const samplePosts = [
@@ -64,23 +66,70 @@ const samplePosts = [
 ];
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState("trending");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { campaigns, loading } = useCampaigns();
+  const {
+    query,
+    setQuery,
+    results,
+    isSearching,
+    recentSearches,
+    addToRecentSearches,
+    clearRecentSearches
+  } = useSearch();
+
+  const handleSearchFocus = () => {
+    setSearchOpen(true);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      addToRecentSearches(query);
+    }
+  };
+
+  const handleRecentSearchClick = (search: string) => {
+    setQuery(search);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-1 container py-6 pb-20 lg:pb-6">
+        {/* Search Bar */}
+        <div className="mb-6 max-w-2xl mx-auto">
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search topics, campaigns, users..."
+                className="pl-9 bg-background"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={handleSearchFocus}
+              />
+            </div>
+          </form>
+        </div>
+
+        <SearchOverlay
+          isOpen={searchOpen}
+          onClose={() => setSearchOpen(false)}
+          query={query}
+          results={results}
+          isSearching={isSearching}
+          recentSearches={recentSearches}
+          onRecentSearchClick={handleRecentSearchClick}
+          onClearRecent={clearRecentSearches}
+        />
+
         {/* Ad Carousel */}
         <div className="mb-6">
           <AdCarousel />
-        </div>
-
-        {/* Feed Tabs */}
-        <div className="mb-6">
-          <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
 
         {/* Main Content */}
