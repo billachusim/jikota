@@ -9,7 +9,8 @@ interface AuthContextType {
   signUp: (
     email: string, 
     password: string, 
-    fullName?: string, 
+    fullName?: string,
+    username?: string,
     userType?: string,
     businessName?: string,
     cacRegNumber?: string,
@@ -51,7 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (
     email: string, 
     password: string, 
-    fullName?: string, 
+    fullName?: string,
+    username?: string,
     userType?: string,
     businessName?: string,
     cacRegNumber?: string,
@@ -66,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          username: username,
           user_type: userType,
           business_name: businessName,
           cac_reg_number: cacRegNumber,
