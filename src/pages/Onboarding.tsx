@@ -40,6 +40,7 @@ export default function Onboarding() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [userType, setUserType] = useState<"individual" | "corporate">("individual");
   const [isSignUp, setIsSignUp] = useState(true);
   
@@ -66,7 +67,8 @@ export default function Onboarding() {
         const { error } = await signUp(
           email, 
           password, 
-          fullName, 
+          fullName,
+          username,
           userType,
           businessName,
           cacRegNumber,
@@ -237,6 +239,18 @@ export default function Onboarding() {
                       placeholder={userType === "corporate" ? "John Doe" : "John Doe"}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="johndoe"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
                     />
                   </div>
 

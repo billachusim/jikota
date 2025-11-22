@@ -93,26 +93,28 @@ export default function PostCard({ campaign }: PostCardProps) {
         </div>
       </Link>
 
-      {/* Progress */}
-      <div className="mt-4 space-y-2">
-        <Progress value={progressPercent} className="h-2" />
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-semibold">
-            ₦{campaign.current_amount.toLocaleString()} raised
-          </span>
-          <span className="text-muted-foreground">
-            of ₦{campaign.target_amount.toLocaleString()}
-          </span>
-          {campaign.milestones && campaign.milestones.length > 0 && (
-            <>
-              <span className="text-muted-foreground">·</span>
-              <span className="text-muted-foreground">
-                {campaign.milestones.filter(m => m.completed).length} of {campaign.milestones.length} milestones
-              </span>
-            </>
-          )}
+      {/* Progress - Hide for Participate category */}
+      {campaign.category !== "Participate" && (
+        <div className="mt-4 space-y-2">
+          <Progress value={progressPercent} className="h-2" />
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="font-semibold">
+              ₦{campaign.current_amount.toLocaleString()} raised
+            </span>
+            <span className="text-muted-foreground">
+              of ₦{campaign.target_amount.toLocaleString()}
+            </span>
+            {campaign.milestones && campaign.milestones.length > 0 && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground">
+                  {campaign.milestones.filter(m => m.completed).length} of {campaign.milestones.length} milestones
+                </span>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="mt-4 flex flex-wrap items-center gap-1">

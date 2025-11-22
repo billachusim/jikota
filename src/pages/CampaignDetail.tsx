@@ -5,13 +5,13 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import SocialShare from "@/components/SocialShare";
+import Comments from "@/components/Comments";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import donateThumb from "@/assets/donate-thumbnail.png";
@@ -31,7 +31,6 @@ export default function CampaignDetail() {
   const [customAmount, setCustomAmount] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const [comment, setComment] = useState("");
 
   // Sample campaign data
   const campaign = {
@@ -107,43 +106,64 @@ export default function CampaignDetail() {
               </div>
             </div>
 
-            {/* Progress */}
-            <Card className="p-6">
-              <Progress value={progressPercent} className="h-3 mb-4" />
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <div>
-                  <p className="text-2xl font-bold">
-                    ₦{campaign.raised.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    raised of ₦{campaign.goal.toLocaleString()}
-                  </p>
+            {/* Progress - Show only for non-Participate campaigns */}
+            {campaign.category !== "Participate" && (
+              <Card className="p-6">
+                <Progress value={progressPercent} className="h-3 mb-4" />
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <div>
+                    <p className="text-2xl font-bold">
+                      ₦{campaign.raised.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      raised of ₦{campaign.goal.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div>
+                    <p className="text-2xl font-bold">{campaign.contributors}</p>
+                    <p className="text-sm text-muted-foreground">contributors</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div>
+                    <p className="text-2xl font-bold">{campaign.days_left}</p>
+                    <p className="text-sm text-muted-foreground">days left</p>
+                  </div>
                 </div>
-                <div className="h-8 w-px bg-border" />
-                <div>
-                  <p className="text-2xl font-bold">{campaign.contributors}</p>
-                  <p className="text-sm text-muted-foreground">contributors</p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsLiked(!isLiked)}
+                  >
+                    <Heart className={isLiked ? "fill-current text-primary" : ""} />
+                  </Button>
+                  <SocialShare title={campaign.title} />
+                  <Button variant="ghost" size="sm">
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="h-8 w-px bg-border" />
-                <div>
-                  <p className="text-2xl font-bold">{campaign.days_left}</p>
-                  <p className="text-sm text-muted-foreground">days left</p>
+              </Card>
+            )}
+
+            {/* Engagement for Participate */}
+            {campaign.category === "Participate" && (
+              <Card className="p-6">
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsLiked(!isLiked)}
+                  >
+                    <Heart className={isLiked ? "fill-current text-primary" : ""} />
+                  </Button>
+                  <SocialShare title={campaign.title} />
+                  <Button variant="ghost" size="sm">
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsLiked(!isLiked)}
-                >
-                  <Heart className={isLiked ? "fill-current text-primary" : ""} />
-                </Button>
-                <SocialShare title={campaign.title} />
-                <Button variant="ghost" size="sm">
-                  <MessageCircle className="h-4 w-4" />
-                </Button>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Description */}
             <Card className="p-6">
@@ -155,41 +175,43 @@ export default function CampaignDetail() {
               </p>
             </Card>
 
-            {/* Milestones */}
-            <Card className="p-6">
-              <h2 className="font-heading text-xl font-semibold mb-4">
-                Milestones
-              </h2>
-              <div className="space-y-4">
-                {milestones.map((milestone, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex-shrink-0 mt-1">
-                      <CheckCircle2
-                        className={
-                          milestone.completed
-                            ? "h-5 w-5 text-primary"
-                            : "h-5 w-5 text-muted-foreground"
-                        }
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{milestone.title}</p>
-                      <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
-                        <span>₦{milestone.amount.toLocaleString()}</span>
-                        <span>·</span>
-                        <span>{milestone.date}</span>
+            {/* Milestones - Show only for non-Participate campaigns */}
+            {campaign.category !== "Participate" && (
+              <Card className="p-6">
+                <h2 className="font-heading text-xl font-semibold mb-4">
+                  Milestones
+                </h2>
+                <div className="space-y-4">
+                  {milestones.map((milestone, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex-shrink-0 mt-1">
+                        <CheckCircle2
+                          className={
+                            milestone.completed
+                              ? "h-5 w-5 text-primary"
+                              : "h-5 w-5 text-muted-foreground"
+                          }
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{milestone.title}</p>
+                        <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
+                          <span>₦{milestone.amount.toLocaleString()}</span>
+                          <span>·</span>
+                          <span>{milestone.date}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                💡 Funds held until milestone 1 is verified
-              </p>
-            </Card>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  💡 Funds held until milestone 1 is verified
+                </p>
+              </Card>
+            )}
 
             {/* Updates Timeline */}
             <Card className="p-6">
@@ -240,142 +262,91 @@ export default function CampaignDetail() {
 
             {/* Comments Section */}
             <Card className="p-6">
-              <h2 className="font-heading text-xl font-semibold mb-4">
-                Comments ({3})
-              </h2>
-              
-              {/* Comment Input */}
-              <div className="mb-6">
-                <Textarea
-                  placeholder="Add a comment..."
-                  className="mb-3"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  maxLength={500}
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {comment.length}/500 characters
-                  </span>
-                  <Button size="sm" disabled={!comment.trim()}>
-                    Post Comment
-                  </Button>
-                </div>
-              </div>
-
-              {/* Comment List */}
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm">John Doe</p>
-                      <span className="text-xs text-muted-foreground">1 day ago</span>
-                    </div>
-                    <p className="text-sm text-foreground/90">
-                      Great initiative! Happy to support education for these children.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback>SM</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm">Sarah M.</p>
-                      <span className="text-xs text-muted-foreground">3 days ago</span>
-                    </div>
-                    <p className="text-sm text-foreground/90">
-                      This is exactly what our community needs. Keep up the good work!
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Comments campaignId={campaign.id} />
             </Card>
           </div>
 
-          {/* Donation Widget */}
-          <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-20">
-              <h3 className="font-heading text-lg font-semibold mb-4">
-                Make a Contribution
-              </h3>
+          {/* Donation Widget - Show only for non-Participate campaigns */}
+          {campaign.category !== "Participate" && (
+            <div className="lg:col-span-1">
+              <Card className="p-6 sticky top-20">
+                <h3 className="font-heading text-lg font-semibold mb-4">
+                  Make a Contribution
+                </h3>
 
-              {/* Preset Amounts */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {presetAmounts.map((amount) => (
-                  <Button
-                    key={amount}
-                    variant={selectedAmount === amount ? "default" : "outline"}
-                    onClick={() => {
-                      setSelectedAmount(amount);
-                      setCustomAmount("");
+                {/* Preset Amounts */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {presetAmounts.map((amount) => (
+                    <Button
+                      key={amount}
+                      variant={selectedAmount === amount ? "default" : "outline"}
+                      onClick={() => {
+                        setSelectedAmount(amount);
+                        setCustomAmount("");
+                      }}
+                    >
+                      ₦{amount.toLocaleString()}
+                    </Button>
+                  ))}
+                </div>
+
+                {/* Custom Amount */}
+                <div className="space-y-2 mb-4">
+                  <Label htmlFor="custom-amount">Custom Amount (₦)</Label>
+                  <Input
+                    id="custom-amount"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={customAmount}
+                    onChange={(e) => {
+                      setCustomAmount(e.target.value);
+                      setSelectedAmount(null);
                     }}
-                  >
-                    ₦{amount.toLocaleString()}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Custom Amount */}
-              <div className="space-y-2 mb-4">
-                <Label htmlFor="custom-amount">Custom Amount (₦)</Label>
-                <Input
-                  id="custom-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={customAmount}
-                  onChange={(e) => {
-                    setCustomAmount(e.target.value);
-                    setSelectedAmount(null);
-                  }}
-                />
-              </div>
-
-              {/* Anonymous */}
-              <div className="flex items-center justify-between mb-4">
-                <Label htmlFor="anonymous">Contribute anonymously</Label>
-                <Switch
-                  id="anonymous"
-                  checked={isAnonymous}
-                  onCheckedChange={setIsAnonymous}
-                />
-              </div>
-
-              {/* Fee Breakdown */}
-              {activeAmount > 0 && (
-                <div className="bg-muted/50 rounded-lg p-3 mb-4 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Your contribution</span>
-                    <span>₦{activeAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Platform fee (2.5%)</span>
-                    <span>₦{platformFee.toLocaleString()}</span>
-                  </div>
-                  <div className="border-t pt-1 mt-1 flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>₦{totalAmount.toLocaleString()}</span>
-                  </div>
+                  />
                 </div>
-              )}
 
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={activeAmount === 0}
-              >
-                Contribute ₦{activeAmount.toLocaleString()}
-              </Button>
+                {/* Anonymous */}
+                <div className="flex items-center justify-between mb-4">
+                  <Label htmlFor="anonymous">Contribute anonymously</Label>
+                  <Switch
+                    id="anonymous"
+                    checked={isAnonymous}
+                    onCheckedChange={setIsAnonymous}
+                  />
+                </div>
 
-              <p className="text-xs text-center text-muted-foreground mt-3">
-                Secure payment powered by Pooliverse
-              </p>
-            </Card>
-          </div>
+                {/* Fee Breakdown */}
+                {activeAmount > 0 && (
+                  <div className="bg-muted/50 rounded-lg p-3 mb-4 space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Your contribution</span>
+                      <span>₦{activeAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Platform fee (2.5%)</span>
+                      <span>₦{platformFee.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t pt-1 mt-1 flex justify-between font-semibold">
+                      <span>Total</span>
+                      <span>₦{totalAmount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={activeAmount === 0}
+                >
+                  Contribute ₦{activeAmount.toLocaleString()}
+                </Button>
+
+                <p className="text-xs text-center text-muted-foreground mt-3">
+                  Secure payment powered by Pooliverse
+                </p>
+              </Card>
+            </div>
+          )}
         </div>
       </main>
 

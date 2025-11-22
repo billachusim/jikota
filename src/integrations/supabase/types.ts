@@ -64,6 +64,58 @@ export type Database = {
           },
         ]
       }
+      comments: {
+        Row: {
+          campaign_id: string
+          content: string
+          created_at: string
+          id: string
+          parent_comment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          content: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestones: {
         Row: {
           amount: number
@@ -114,6 +166,7 @@ export type Database = {
           id: string
           updated_at: string | null
           user_type: string | null
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -123,6 +176,7 @@ export type Database = {
           id: string
           updated_at?: string | null
           user_type?: string | null
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -132,6 +186,7 @@ export type Database = {
           id?: string
           updated_at?: string | null
           user_type?: string | null
+          username?: string | null
         }
         Relationships: []
       }
