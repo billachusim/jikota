@@ -1,6 +1,7 @@
 import { X, Search, Clock, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchResult } from "@/hooks/useSearch";
@@ -9,6 +10,7 @@ interface SearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   query: string;
+  onQueryChange: (query: string) => void;
   results: SearchResult[];
   isSearching: boolean;
   recentSearches: string[];
@@ -20,6 +22,7 @@ export default function SearchOverlay({
   isOpen,
   onClose,
   query,
+  onQueryChange,
   results,
   isSearching,
   recentSearches,
@@ -32,11 +35,26 @@ export default function SearchOverlay({
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm animate-fade-in">
       <div className="container max-w-2xl pt-20">
         <div className="bg-card rounded-lg shadow-lg border">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-heading font-semibold">Search Results</h3>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+          <div className="p-4 border-b">
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search topics, campaigns, users..."
+                className="pl-9 bg-background text-foreground"
+                value={query}
+                onChange={(e) => onQueryChange(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading font-semibold text-sm text-muted-foreground">
+                {query ? "Search Results" : "Recent Searches"}
+              </h3>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <ScrollArea className="h-[500px]">
