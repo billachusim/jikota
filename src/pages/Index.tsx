@@ -80,6 +80,7 @@ export default function Index() {
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
           query={query}
+          onQueryChange={setQuery}
           results={results}
           isSearching={isSearching}
           recentSearches={recentSearches}
