@@ -28,11 +28,11 @@ export default function FloatingFAB({ onCreateClick }: FloatingFABProps) {
       {/* Create FAB */}
       <Button
         onClick={onCreateClick}
-        size="lg"
-        className="fixed bottom-20 left-4 lg:bottom-8 h-14 px-6 rounded-full shadow-lg hover:shadow-xl transition-smooth z-40 animate-scale-in"
+        size="sm"
+        className="fixed bottom-20 left-4 lg:bottom-8 h-10 px-4 rounded-full shadow-lg hover:shadow-xl transition-smooth z-40 animate-scale-in"
       >
-        <Plus className="h-5 w-5 mr-2" />
-        <span className="hidden sm:inline">Create</span>
+        <Plus className="h-4 w-4 mr-1.5" />
+        <span className="hidden sm:inline text-sm">Create</span>
       </Button>
 
       {/* Scroll to Top */}
