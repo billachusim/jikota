@@ -219,12 +219,19 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
         
         imageUrl = publicUrl;
       }
+      // Determine the category based on campaign type
+      const campaignCategory = selectedThumbnail === "PARTICIPATE" 
+        ? "Participate" 
+        : selectedThumbnail === "DONATE" 
+          ? "Donate" 
+          : "Invest";
+
       // Insert campaign
       const { data: campaign, error: campaignError } = await supabase
         .from("campaigns")
         .insert({
           title,
-          category: selectedThumbnail === "PARTICIPATE" ? "Participate" : category,
+          category: campaignCategory,
           description: body,
           target_amount: selectedThumbnail === "PARTICIPATE" ? 0 : parseFloat(goal),
           user_id: user.id,
