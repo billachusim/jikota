@@ -58,7 +58,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 Pooliverse. All rights reserved.</p>
+          <p>&copy; 2025 Jikota. All rights reserved.</p>
         </div>
       </div>
     </footer>
