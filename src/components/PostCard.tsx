@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { MessageCircle, Share2, AtSign, Heart, UserPlus, Send, MoreVertical, Bookmark } from "lucide-react";
+import { MoreVertical, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import participateThumb from "@/assets/participate-thumbnail.png";
 import donateThumb from "@/assets/donate-thumbnail.png";
-import investThumb from "@/assets/invest-thumbnail.png";
 import avatar1 from "@/assets/avatar-1.png";
 import { CampaignWithDetails } from "@/hooks/useCampaigns";
 import { formatDistanceToNow } from "date-fns";
@@ -19,12 +17,6 @@ interface PostCardProps {
   campaign: CampaignWithDetails;
 }
 
-const thumbnails = {
-  PARTICIPATE: participateThumb,
-  DONATE: donateThumb,
-  INVEST: investThumb,
-};
-
 export default function PostCard({ campaign }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
@@ -34,13 +26,44 @@ export default function PostCard({ campaign }: PostCardProps) {
   const truncatedBody = campaign.description.split("\n").slice(0, 6).join("\n");
   const needsTruncation = campaign.description.length > truncatedBody.length;
 
-  const thumbnailSrc = donateThumb; // Default thumbnail for now
+  const thumbnailSrc = donateThumb;
   const avatarSrc = campaign.profiles?.avatar_url || avatar1;
   const timeAgo = formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true });
 
   const handleQuote = () => {
     setQuoteText(`"${campaign.title}"\n\n`);
     setQuoteModalOpen(true);
+  };
+
+  // Determine CTA button based on category
+  const getCTAButton = () => {
+    if (campaign.category === "Donate") {
+      return (
+        <Link to={`/campaign/${campaign.id}/donate`}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            CLICK TO DONATE
+          </Button>
+        </Link>
+      );
+    }
+    if (campaign.category === "Invest") {
+      return (
+        <Link to={`/campaign/${campaign.id}/pledge`}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            CLICK TO INVEST
+          </Button>
+        </Link>
+      );
+    }
+    return null;
   };
 
   return (
@@ -67,6 +90,14 @@ export default function PostCard({ campaign }: PostCardProps) {
           <MoreVertical className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Location */}
+      {campaign.location && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+          <MapPin className="h-3 w-3" />
+          <span>{campaign.location}</span>
+        </div>
+      )}
 
       <Link to={`/campaign/${campaign.id}`} className="block group">
         <div className="flex flex-col md:flex-row gap-4">
@@ -107,21 +138,25 @@ export default function PostCard({ campaign }: PostCardProps) {
       {campaign.category !== "Participate" && (
         <div className="mt-4 space-y-2">
           <Progress value={progressPercent} className="h-2" />
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="font-semibold">
-              ₦{campaign.current_amount.toLocaleString()} raised
-            </span>
-            <span className="text-muted-foreground">
-              of ₦{campaign.target_amount.toLocaleString()}
-            </span>
-            {campaign.milestones && campaign.milestones.length > 0 && (
-              <>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">
-                  {campaign.milestones.filter(m => m.completed).length} of {campaign.milestones.length} milestones
-                </span>
-              </>
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">
+                ₦{campaign.current_amount.toLocaleString()} {campaign.category === "Invest" ? "pledged" : "raised"}
+              </span>
+              <span className="text-muted-foreground">
+                of ₦{campaign.target_amount.toLocaleString()}
+              </span>
+              {campaign.milestones && campaign.milestones.length > 0 && (
+                <>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">
+                    {campaign.milestones.filter(m => m.completed).length} of {campaign.milestones.length} milestones
+                  </span>
+                </>
+              )}
+            </div>
+            {/* CTA Button */}
+            {getCTAButton()}
           </div>
         </div>
       )}

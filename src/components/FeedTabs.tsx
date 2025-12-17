@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { id: "trending", label: "Trending topics/posts" },
-  { id: "your", label: "Your topics/posts" },
-  { id: "followers", label: "Followers topics/posts" },
-  { id: "following", label: "Following topics/posts" },
+  { id: "all", label: "All" },
+  { id: "Participate", label: "Participate" },
+  { id: "Donate", label: "Donate" },
+  { id: "Invest", label: "Invest" },
 ];
 
 interface FeedTabsProps {
