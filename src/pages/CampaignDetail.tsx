@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, MapPin } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -138,9 +138,18 @@ export default function CampaignDetail() {
                   <p className="font-medium flex items-center gap-2">
                     {campaign.profiles?.full_name || "Anonymous"}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}
-                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}</span>
+                    {campaign.location && (
+                      <>
+                        <span>·</span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {campaign.location}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

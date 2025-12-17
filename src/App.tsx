@@ -7,6 +7,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import CampaignDetail from "./pages/CampaignDetail";
 import Onboarding from "./pages/Onboarding";
+import DonatePage from "./pages/DonatePage";
+import PledgePage from "./pages/PledgePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/campaign/:id" element={<CampaignDetail />} />
+            <Route path="/campaign/:id/donate" element={<DonatePage />} />
+            <Route path="/campaign/:id/pledge" element={<PledgePage />} />
             <Route path="/onboarding" element={<Onboarding />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

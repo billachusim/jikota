@@ -58,6 +58,7 @@ export type Database = {
           description: string
           id: string
           image_url: string | null
+          location: string | null
           status: string
           target_amount: number
           title: string
@@ -71,6 +72,7 @@ export type Database = {
           description: string
           id?: string
           image_url?: string | null
+          location?: string | null
           status?: string
           target_amount: number
           title: string
@@ -84,6 +86,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          location?: string | null
           status?: string
           target_amount?: number
           title?: string

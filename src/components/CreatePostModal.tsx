@@ -55,6 +55,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
   const [selectedThumbnail, setSelectedThumbnail] = useState("DONATE");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
+  const [location, setLocation] = useState("");
   const [goal, setGoal] = useState("");
   const [deadline, setDeadline] = useState("");
   const [body, setBody] = useState("");
@@ -92,10 +93,10 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
   // Auto-save to localStorage
   useEffect(() => {
     if (title || body) {
-      const draft = { title, category, goal, deadline, body, selectedThumbnail, milestones };
+      const draft = { title, category, location, goal, deadline, body, selectedThumbnail, milestones };
       localStorage.setItem("campaignDraft", JSON.stringify(draft));
     }
-  }, [title, category, goal, deadline, body, selectedThumbnail, milestones]);
+  }, [title, category, location, goal, deadline, body, selectedThumbnail, milestones]);
 
   // Load draft on mount
   useEffect(() => {
@@ -104,6 +105,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
       const draft = JSON.parse(savedDraft);
       setTitle(draft.title || "");
       setCategory(draft.category || "");
+      setLocation(draft.location || "");
       setGoal(draft.goal || "");
       setDeadline(draft.deadline || "");
       setBody(draft.body || "");
@@ -228,6 +230,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
           user_id: user.id,
           status: "active",
           image_url: imageUrl,
+          location: location || null,
         })
         .select()
         .single();
@@ -254,6 +257,7 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
       localStorage.removeItem("campaignDraft");
       setTitle("");
       setCategory("");
+      setLocation("");
       setGoal("");
       setDeadline("");
       setBody("");
@@ -361,6 +365,21 @@ export default function CreatePostModal({ open, onOpenChange }: CreatePostModalP
                 {errors.category}
               </p>
             )}
+          </div>
+
+          {/* Location */}
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              placeholder="e.g., Lagos, Nigeria"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              maxLength={100}
+            />
+            <p className="text-xs text-muted-foreground">
+              Where is this campaign/project based?
+            </p>
           </div>
 
           {/* Goal & Deadline - Only show for non-Participate campaigns */}
