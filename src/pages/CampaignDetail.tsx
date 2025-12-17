@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Calendar, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -230,38 +230,6 @@ export default function CampaignDetail() {
                 </p>
               </Card>
             )}
-
-            {/* Campaign Updates */}
-            <Card className="p-6">
-              <h2 className="font-heading text-xl font-semibold mb-4">
-                Campaign Updates
-              </h2>
-              <div className="space-y-4">
-                <div className="flex gap-3 pb-4 border-b">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={campaign.profiles?.avatar_url || avatar1} />
-                    <AvatarFallback>
-                      {campaign.profiles?.full_name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm">{campaign.profiles?.full_name || "Anonymous"}</p>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                    <p className="text-sm text-foreground/90 mb-2">
-                      Campaign created
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
 
             {/* Comments Section */}
             <Card className="p-6" id="comments">
