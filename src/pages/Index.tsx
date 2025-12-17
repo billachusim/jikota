@@ -62,7 +62,7 @@ export default function Index() {
               <Input
                 type="search"
                 placeholder="Search topics, campaigns, users..."
-                className="pl-9 bg-background"
+                className="pl-9 bg-background text-foreground"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={handleSearchFocus}
