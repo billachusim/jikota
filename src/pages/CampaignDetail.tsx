@@ -345,7 +345,7 @@ export default function CampaignDetail() {
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground mt-3">
-                  Secure payment powered by Pooliverse
+                  Secure payment powered by Jikota
                 </p>
               </Card>
             </div>

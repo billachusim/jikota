@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import logoIcon from "@/assets/pooliverse-logo.png";
+import logoIcon from "@/assets/jikota-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 
 const steps = [
   {
-    title: "Welcome to Pooliverse",
+    title: "Welcome to Jikota",
     subtitle: "Discover, start, and support community campaigns",
     icon: Users,
     description: "Join thousands of people making a difference in their communities through collaborative crowdfunding.",
@@ -103,8 +103,8 @@ export default function Onboarding() {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-secondary/5">
       {/* Logo */}
       <div className="mb-8 flex items-center gap-2">
-        <img src={logoIcon} alt="Pooliverse" className="h-12 w-12" />
-        <span className="font-heading font-bold text-2xl">Pooliverse</span>
+        <img src={logoIcon} alt="Jikota" className="h-12 w-12" />
+        <span className="font-heading font-bold text-2xl">Jikota</span>
       </div>
 
       {/* Main Card */}
