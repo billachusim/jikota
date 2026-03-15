@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import logoIcon from "@/assets/jikota-logo.png";
 import { useAuth } from "@/hooks/useAuth";
+import { lovable } from "@/integrations/lovable/index";
 
 const steps = [
   {
